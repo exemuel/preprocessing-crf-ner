@@ -92,6 +92,29 @@ class DatasetPreparator:
             self.add_post()
             self.df = self.df[["sentence", "token", "post", "ne"]]
             return self.df
+            
+    def add_bio_ne(self):
+        dfd = self.df.copy()
+        bio_tag = []
+        prev_tag = "O"
+        for _, tag in self.df["ne"].iteritems():
+            if tag == "O": #O
+                bio_tag.append((tag))
+                prev_tag = tag
+                continue
+            if tag != "O" and prev_tag == "O": # Begin NE
+                bio_tag.append(("B-"+tag))
+                prev_tag = tag
+            elif prev_tag != "O" and prev_tag == tag: # Inside NE
+                bio_tag.append(("I-"+tag))
+                prev_tag = tag
+            elif prev_tag != "O" and prev_tag != tag: # nearby NE
+                bio_tag.append(("B-"+tag))
+                prev_tag = tag
+        
+        dfd["bio_ne"] = bio_tag
+        self.df = dfd
+        return self.df
 
 class SentenceGetter(object):
     def __init__(self, data):
@@ -100,7 +123,7 @@ class SentenceGetter(object):
         self.empty = False
         agg_func = lambda s: [(w, p, t) for w, p, t in zip(s['token'].values.tolist(), 
                                                            s['post'].values.tolist(), 
-                                                           s['ne'].values.tolist())]
+                                                           s['bio_ne'].values.tolist())]
         self.grouped = self.data.groupby('sentence').apply(agg_func)
         self.sentences = [s for s in self.grouped]
         
