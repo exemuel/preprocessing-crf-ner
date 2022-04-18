@@ -11,7 +11,7 @@ __pycache__/
 build/
 develop-eggs/
 dist/
-pre-trained-model/all_indo_man_tag_corpus_model.crf.tagger
+pre-trained-model/
 data/
 downloads/
 eggs/
