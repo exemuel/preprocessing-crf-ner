@@ -7,21 +7,51 @@ FileReader defines several file reading operations.
 # standard library
 import os
 import csv
+import re
+import json
+from datetime import datetime
 
 # 3rd party packages
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from nltk.tag import CRFTagger
+from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
+from num2words import num2words
 
-__author__ = "Samuel Situmeang"
-__copyright__ = "Copyright 2022, Institut Teknologi Del"
-__credits__ = ["Samuel Situmeang"]
-__license__ = "GPL-3.0"
-__version__ = "1.0.0"
-__maintainer__ = "Samuel Situmeang"
-__email__ = "samuel.situmeang@del.ac.id"
-__status__ = "Production"
+def isfloat(x):
+    try:
+        a = float(x)
+    except (TypeError, ValueError):
+        return False
+    else:
+        return True
+
+def isint(x):
+    try:
+        a = float(x)
+        b = int(a)
+    except (TypeError, ValueError):
+        return False
+    else:
+        return a == b
+
+def detect_special_char(pass_string):
+    regex= re.compile('[^.,]') 
+    if(regex.search(pass_string) == None): 
+        res = False
+    else: 
+        res = True
+    return(res)
+
+class RegexMap(object):
+    def __init__(self, *args, **kwargs):
+        self._items = dict(*args, **kwargs)
+    def __getitem__(self, key):
+        for regex in self._items.keys():
+            if re.search(regex, key, re.I):
+                return self._items[regex]
+        raise KeyError
 
 class FileReader:
     """FileReader class."""
@@ -63,6 +93,76 @@ class FileReader:
             return df
         except Exception as e:
             print(e)
+
+class Preprocessing:
+    """Preprocessing class."""
+    def __init__(self, df):
+        self.df = df
+    
+    def expand_contractions(self):
+        """
+        Contraction is the shortened form of a word.
+        Preprocessing.expand_contractions() should return the data in a DataFrame.
+        """
+        try:
+            # load Indonesian fasttext model
+            with open("data\indo_contraction_dict.json") as file:
+                contraction_dict = json.load(file)
+            
+            rm = RegexMap(contraction_dict)
+
+            df_copy = self.df.copy()
+            df_copy["token"] = df_copy["token"].apply(lambda x: rm[x])
+            self.df = df_copy
+            return self.df
+
+        except Exception as e:
+            print(e)
+            return self.df
+        
+
+    def hypen_comma_splitting(self):
+        """
+        Split hypen and comma punctuation into separate tokens.
+        Preprocessing.hypen_comma_splitting() should return the data in a DataFrame.
+        """
+        df_copy = self.df.copy()
+        df_copy["token"] = df_copy["token"].apply(lambda x:re.split("([-])", x) if isfloat(x) == False else x)
+        df_copy = df_copy.explode('token').reset_index(drop=True)
+        self.df = df_copy
+        return self.df
+    
+    def lowercasing(self):
+        """Preprocessing.lowercasing() should return the data in a DataFrame."""
+        df_copy = self.df.copy()
+        df_copy["token"] = df_copy["token"].apply(lambda x: x.lower())
+        self.df = df_copy
+        return self.df
+    
+    def stemming(self):
+        """
+        Stemming based on PySastrawi by Hanif Amal Robbani.
+        Preprocessing.stemming() should return the data in a DataFrame.
+        """
+        df_copy = self.df.copy()
+        factory = StemmerFactory()
+        stemmer = factory.create_stemmer()
+        df_copy["token"] = df_copy["token"].apply(lambda x:stemmer.stem(x) if detect_special_char(x) == True else x)
+        self.df = df_copy
+        return self.df
+    
+    def number2words(self):
+        """
+        Convert numbers to words based on num2words by Taro Ogawa.
+        Preprocessing.number2words() should return the data in a DataFrame.
+        """
+        df_copy = self.df.copy()
+        df_copy["token"] = df_copy["token"].apply(lambda x:re.split(" ", num2words(float(x), lang='id')) \
+            if isfloat(x) == True else (re.split(" ", num2words(int(x), lang='id')) \
+                if isint(x) == True else x))
+        df_copy["token"] = df_copy.explode("token").reset_index(drop=True)
+        self.df = df_copy
+        return self.df
 
 class DatasetPreparator:
     """DatasetPreparator class."""
