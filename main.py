@@ -16,17 +16,8 @@ from sklearn.model_selection import train_test_split
 # custom modules
 from util import *
 
-__author__ = "Samuel Situmeang"
-__copyright__ = "Copyright 2022, Institut Teknologi Del"
-__credits__ = ["Samuel Situmeang"]
-__license__ = "GPL-3.0"
-__version__ = "1.0.0"
-__maintainer__ = "Samuel Situmeang"
-__email__ = "samuel.situmeang@del.ac.id"
-__status__ = "Production"
-
 def main():
-    data_path = "data/SINGGALANG.tsv"
+    data_path = "data/SINGGALANG-demo.tsv"
     pretrained_tagger = "pre-trained-model/all_indo_man_tag_corpus_model.crf.tagger"
 
     fr = FileReader(data_path)
@@ -38,7 +29,14 @@ def main():
         print(f"Currently, the given file cannot be processed.")
         sys.exit()
     
-    dp = DatasetPreparator(df_raw, pretrained_tagger)
+    pp = Preprocessing(df_raw.head(18))
+    df = pp.expand_contractions()
+    df = pp.hypen_comma_splitting()
+    df = pp.lowercasing()
+    df = pp.stemming()
+    df = pp.number2words()
+
+    dp = DatasetPreparator(df, pretrained_tagger)
     df = dp.check_post()
     df = dp.add_bio_ne()
     
