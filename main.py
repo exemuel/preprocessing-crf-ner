@@ -6,7 +6,7 @@ Named Entity Recognition based on Conditional Random Field in Indonesian Text.
 
 # standard library
 import sys
-from tabnanny import verbose
+from datetime import datetime
 
 # 3rd party packages
 from sklearn_crfsuite import CRF
@@ -29,9 +29,10 @@ def main():
         print(f"Currently, the given file cannot be processed.")
         sys.exit()
     
+    start_time = datetime.now()
     pp = Preprocessing(df_raw)
     df = pp.expand_contractions()
-    df = pp.hypen_comma_splitting()
+    df = pp.hyphen_comma_splitting()
     df = pp.lowercasing()
     df = pp.stemming()
     df = pp.number2words()
@@ -67,6 +68,8 @@ def main():
     y_test_flat = [item for sublist in y_test for item in sublist ]
     y_pred_flat = [item for sublist in y_pred for item in sublist ]
     print(classification_report(y_test_flat, y_pred_flat, labels = new_classes))
+    end_time = datetime.now()
+    print("--- %s seconds ---" % (end_time - start_time))
 
 if __name__ == "__main__":
     main()
