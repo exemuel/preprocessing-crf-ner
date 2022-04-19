@@ -64,6 +64,7 @@ class FileReader:
     def read_tsv(self):
         """FileReader.read_tsv() should return the data in a DataFrame."""
         try:
+            print(f"File reading is in progress...")
             df = pd.read_csv(self.fname,
                             sep="\t",
                             names=["token", "ne"],
@@ -82,6 +83,7 @@ class FileReader:
             df["sentence"] = list_tmp
             df = df.dropna(thresh=2).reset_index(drop=True)
             df[["sentence"]] = df[["sentence"]].astype(int)
+            print(f"File reading is complete.")
 
             return df
         except Exception as e:
@@ -103,74 +105,100 @@ class Preprocessing:
         Preprocessing.expand_contractions() should return the data in a DataFrame.
         """
         try:
-            # load Indonesian fasttext model
+            print(f"Expand contractions is in progress...")
+            # load Indonesian contraction dictionary
             with open("data\indo_contraction_dict.json") as file:
                 contraction_dict = json.load(file)
             df_copy = self.df.copy()
             df_copy.replace({"token": contraction_dict},inplace=True)
             self.df = df_copy
+            print(f"Expand contractions is complete.")
             return self.df
 
         except Exception as e:
             print(e)
             return self.df
 
-    def hypen_comma_splitting(self):
+    def hyphen_comma_splitting(self):
         """
-        Split hypen and comma punctuation into separate tokens.
-        Preprocessing.hypen_comma_splitting() should return the data in a DataFrame.
+        Split hyphen and comma punctuation into separate tokens.
+        Preprocessing.hyphen_comma_splitting() should return the data in a DataFrame.
         """
-        df_copy = self.df.copy()
-        df_copy["token"] = df_copy["token"].apply(lambda x:re.split("([-])", x) if isfloat(x) == False else x)
-        df_copy = df_copy.explode('token').reset_index(drop=True)
-        self.df = df_copy
-        return self.df
+        try:
+            print(f"Hyphen and comma splitting are in progress...")
+            df_copy = self.df.copy()
+            df_copy["token"] = df_copy["token"].apply(lambda x:re.split("([-])", x) if isfloat(x) == False else x)
+            df_copy = df_copy.explode('token').reset_index(drop=True)
+            self.df = df_copy
+            print(f"Hyphen and comma splitting are complete.")
+            return self.df
+        except Exception as e:
+            print(e)
+            return self.df
     
     def lowercasing(self):
         """Preprocessing.lowercasing() should return the data in a DataFrame."""
-        df_copy = self.df.copy()
-        df_copy["token"] = df_copy["token"].apply(lambda x: x.lower())
-        self.df = df_copy
-        return self.df
+        try:
+            print(f"Lowercasing is in progress...")
+            df_copy = self.df.copy()
+            df_copy["token"] = df_copy["token"].apply(lambda x: x.lower())
+            self.df = df_copy
+            print(f"Lowercasing is complete.")
+            return self.df
+        except Exception as e:
+            print(e)
+            return self.df
     
     def stemming(self):
         """
         Stemming based on PySastrawi by Hanif Amal Robbani.
         Preprocessing.stemming() should return the data in a DataFrame.
         """
-        df_copy = self.df.copy()
-        factory = StemmerFactory()
-        stemmer = factory.create_stemmer()
-        df_copy["token"] = df_copy["token"].apply(lambda x:stemmer.stem(x) if any(p in x for p in punctuation) == False else x)
-        self.df = df_copy
-        return self.df
+        try:
+            print(f"Stemming is in progress...")
+            df_copy = self.df.copy()
+            factory = StemmerFactory()
+            stemmer = factory.create_stemmer()
+            df_copy["token"] = df_copy["token"].apply(lambda x:stemmer.stem(x) if any(p in x for p in punctuation) == False else x)
+            self.df = df_copy
+            print(f"Stemming is complete.")
+            return self.df
+        except Exception as e:
+            print(e)
+            return self.df
     
     def number2words(self):
         """
         Convert numbers to words based on num2words by Taro Ogawa.
         Preprocessing.number2words() should return the data in a DataFrame.
         """
-        df_copy = self.df.copy()
-        for idx, val in df_copy["token"].items():
-            if val != ".": 
-                t = val.replace(".", "").replace(",", ".")
-                t = re.split("(\d+)", t)
-                t = list(filter(None, t))
-                if len(t) > 1:
-                    lt = []
-                    for i in t:
-                        if i.isdigit() == True:
-                            y = num2words(int(i), lang='id')
-                            y = re.split(" ", y)
-                            lt.extend(y)
-                        else:
-                            lt.append(i)
-                    df_copy.at[idx, "token"] = (lt)
-                else:
-                    df_copy.at[idx, "token"] = val
-        df_copy = df_copy.explode("token").reset_index(drop=True)
-        self.df = df_copy
-        return self.df
+        try:
+            print(f"Number to words conversion is in progress...")
+            df_copy = self.df.copy()
+            for idx, val in df_copy["token"].items():
+                if val != ".": 
+                    t = val.replace(".", "").replace(",", ".")
+                    t = re.split("(\d+)", t)
+                    t = list(filter(None, t))
+                    if len(t) > 1:
+                        lt = []
+                        for i in t:
+                            if i.isdigit() == True:
+                                y = num2words(int(i), lang='id')
+                                y = re.split(" ", y)
+                                lt.extend(y)
+                            else:
+                                lt.append(i)
+                        df_copy.at[idx, "token"] = (lt)
+                    else:
+                        df_copy.at[idx, "token"] = val
+            df_copy = df_copy.explode("token").reset_index(drop=True)
+            self.df = df_copy
+            print(f"Number to words conversion is complete.")
+            return self.df
+        except Exception as e:
+            print(e)
+            return self.df
 
 class DatasetPreparator:
     """DatasetPreparator class."""
@@ -196,12 +224,14 @@ class DatasetPreparator:
             print(f"\nThe pos tag column exists.")
         else:
             print(f"\nThe pos tag column does not exist.")
-            print(f"Creating column in progress....")
+            print(f"Pos tag column creation is in progress...")
             self.add_post()
             self.df = self.df[["sentence", "token", "post", "ne"]]
+            print(f"Pos tag column creation is complete.")
             return self.df
             
     def add_bio_ne(self):
+        print(f"Represent named entity with the Begin, Inside, Outside (BIO) notation is in progress...")
         dfd = self.df.copy()
         bio_tag = []
         prev_tag = "O"
@@ -222,6 +252,7 @@ class DatasetPreparator:
         
         dfd["bio_ne"] = bio_tag
         self.df = dfd
+        print(f"Represent named entity with the Begin, Inside, Outside (BIO) notation is complete.")
         return self.df
 
 class SentenceGetter(object):
