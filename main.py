@@ -17,7 +17,7 @@ from sklearn.model_selection import train_test_split
 from util import *
 
 def main():
-    data_path = "data/SINGGALANG-demo.tsv"
+    data_path = "data/SINGGALANG.tsv"
     pretrained_tagger = "pre-trained-model/all_indo_man_tag_corpus_model.crf.tagger"
 
     fr = FileReader(data_path)
@@ -29,13 +29,14 @@ def main():
         print(f"Currently, the given file cannot be processed.")
         sys.exit()
     
-    pp = Preprocessing(df_raw.head(18))
+    pp = Preprocessing(df_raw)
     df = pp.expand_contractions()
     df = pp.hypen_comma_splitting()
     df = pp.lowercasing()
     df = pp.stemming()
     df = pp.number2words()
 
+    df = df_raw.copy()
     dp = DatasetPreparator(df, pretrained_tagger)
     df = dp.check_post()
     df = dp.add_bio_ne()
