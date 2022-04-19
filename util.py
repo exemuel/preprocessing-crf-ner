@@ -10,6 +10,7 @@ import csv
 import re
 import json
 from datetime import datetime
+from tkinter import Y
 
 # 3rd party packages
 import pandas as pd
@@ -18,6 +19,7 @@ from tqdm import tqdm
 from nltk.tag import CRFTagger
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from num2words import num2words
+from string import punctuation
 
 def isfloat(x):
     try:
@@ -37,21 +39,12 @@ def isint(x):
         return a == b
 
 def detect_special_char(pass_string):
-    regex= re.compile('[^.,]') 
+    regex= re.compile("[^.,]") 
     if(regex.search(pass_string) == None): 
         res = False
     else: 
         res = True
     return(res)
-
-class RegexMap(object):
-    def __init__(self, *args, **kwargs):
-        self._items = dict(*args, **kwargs)
-    def __getitem__(self, key):
-        for regex in self._items.keys():
-            if re.search(regex, key, re.I):
-                return self._items[regex]
-        raise KeyError
 
 class FileReader:
     """FileReader class."""
@@ -99,6 +92,11 @@ class Preprocessing:
     def __init__(self, df):
         self.df = df
     
+    def _expand_contractions(self, s, contractions_dict, contractions_re):
+        def replace(match):
+            return contractions_dict[match.group(0)]
+        return contractions_re.sub(replace, s)
+
     def expand_contractions(self):
         """
         Contraction is the shortened form of a word.
@@ -108,18 +106,14 @@ class Preprocessing:
             # load Indonesian fasttext model
             with open("data\indo_contraction_dict.json") as file:
                 contraction_dict = json.load(file)
-            
-            rm = RegexMap(contraction_dict)
-
             df_copy = self.df.copy()
-            df_copy["token"] = df_copy["token"].apply(lambda x: rm[x])
+            df_copy.replace({"token": contraction_dict},inplace=True)
             self.df = df_copy
             return self.df
 
         except Exception as e:
             print(e)
             return self.df
-        
 
     def hypen_comma_splitting(self):
         """
@@ -147,7 +141,7 @@ class Preprocessing:
         df_copy = self.df.copy()
         factory = StemmerFactory()
         stemmer = factory.create_stemmer()
-        df_copy["token"] = df_copy["token"].apply(lambda x:stemmer.stem(x) if detect_special_char(x) == True else x)
+        df_copy["token"] = df_copy["token"].apply(lambda x:stemmer.stem(x) if any(p in x for p in punctuation) == False else x)
         self.df = df_copy
         return self.df
     
@@ -157,10 +151,24 @@ class Preprocessing:
         Preprocessing.number2words() should return the data in a DataFrame.
         """
         df_copy = self.df.copy()
-        df_copy["token"] = df_copy["token"].apply(lambda x:re.split(" ", num2words(float(x), lang='id')) \
-            if isfloat(x) == True else (re.split(" ", num2words(int(x), lang='id')) \
-                if isint(x) == True else x))
-        df_copy["token"] = df_copy.explode("token").reset_index(drop=True)
+        for idx, val in df_copy["token"].items():
+            if val != ".": 
+                t = val.replace(".", "").replace(",", ".")
+                t = re.split("(\d+)", t)
+                t = list(filter(None, t))
+                if len(t) > 1:
+                    lt = []
+                    for i in t:
+                        if i.isdigit() == True:
+                            y = num2words(int(i), lang='id')
+                            y = re.split(" ", y)
+                            lt.extend(y)
+                        else:
+                            lt.append(i)
+                    df_copy.at[idx, "token"] = (lt)
+                else:
+                    df_copy.at[idx, "token"] = val
+        df_copy = df_copy.explode("token").reset_index(drop=True)
         self.df = df_copy
         return self.df
 
