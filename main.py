@@ -72,5 +72,12 @@ def main():
     print("--- %s seconds ---" % (end_time - start_time))
     print(f"\n")
 
+    print(f"--- 7th Experiment ---")
+    start_time = datetime.now()
+    exp7(df_raw, pretrained_tagger)
+    end_time = datetime.now()
+    print("--- %s seconds ---" % (end_time - start_time))
+    print(f"\n")
+
 if __name__ == "__main__":
     main()
