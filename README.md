@@ -1,9 +1,9 @@
 # preprocessing-crf-ner
-**Impact of Text Preprocessing on Named Entity Recognition based on Conditional Random Field in Indonesian Text**
+
 ## Description
 This work contributes to extensively assessing the impact of preprocessing tasks on the named entity recognition success in Indonesian text at various feature dimensions and possible interactions among these tasks.
 
-![Flowchart of Experimental Methods on text preprocessing in Indonesian NER based on CRF](https://github.com/exemuel/preprocessing-crf-ner/images/flowchart.png)
+![Flowchart of Experimental Methods on text preprocessing in Indonesian NER based on CRF](https://github.com/exemuel/preprocessing-crf-ner/blob/main/images/flowchart.png)
 
 ### Preprocessing Procedures
 1. Contractions Expansion
