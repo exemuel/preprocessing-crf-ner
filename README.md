@@ -1,9 +1,28 @@
-# Text Preprocessing on Indonesian NER based on CRF
+# preprocessing-crf-ner
 **Impact of Text Preprocessing on Named Entity Recognition based on Conditional Random Field in Indonesian Text**
-Samuel I. G. Situmeang
+## Description
+This work contributes to extensively assessing the impact of preprocessing tasks on the named entity recognition success in Indonesian text at various feature dimensions and possible interactions among these tasks.
 
-Paper : TBA
-Abstract : TBA
+![Flowchart of Experimental Methods on text preprocessing in Indonesian NER based on CRF](https://github.com/exemuel/preprocessing-crf-ner/images/flowchart.png)
+
+### Preprocessing Procedures
+1. Contractions Expansion
+2. Lowercase Conversion
+3. Stemming
+4. Number to Words Conversion
+5. Hyphen and Comma Splitting
+
+###	Feature Extraction
+1.	The word
+2.	The length of the word or number of characters 
+3.	Prefixes and suffixes of the word of varying lengths
+4.	The word in lowercase
+5.	Stemmed version of the word, which deletes all vowels along with g, y, n from the end of the word, but leaves at least a 2 character long stem
+6.	If the word is a punctuation mark
+7.	If the word is a digit
+8.	Features mentioned above for the previous word, the following word, and the words two places before and after
+9.	Word POS tag
+10.	If the word is at the beginning of the sentence (BOS) or the end of the sentence (EOS) or neither
 
 ## Requirements
 * Both Linux and Windows are supported. Linux is recommended for performance and compatibility reasons.
