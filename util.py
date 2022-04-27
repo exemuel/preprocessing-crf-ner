@@ -273,6 +273,13 @@ class SentenceGetter(object):
         except:
             return None
 
+def countvowels(string):
+    num_vowels=0
+    for char in string:
+        if char in "aeiouAEIOU":
+           num_vowels = num_vowels+1
+    return num_vowels
+
 # Feature set
 def word2features(sent, i):
     word = sent[i][0]
@@ -282,6 +289,7 @@ def word2features(sent, i):
         'bias': 1.0,
         'word': word,
         'len(word)': len(word),
+        'nvowels': countvowels(word),
         'word[:4]': word[:4],
         'word[:3]': word[:3],
         'word[:2]': word[:2],
@@ -301,6 +309,7 @@ def word2features(sent, i):
         features.update({
             '-1:word': word1,
             '-1:len(word)': len(word1),
+            '-1:nvowels': countvowels(word1),
             '-1:word.lower()': word1.lower(),
             '-1:word.stemmed': re.sub(r'(.{2,}?)([aeiougyn]+$)',r'\1', word1.lower()),
             '-1:word[:3]': word1[:3],
@@ -321,6 +330,7 @@ def word2features(sent, i):
         features.update({
             '-2:word': word2,
             '-2:len(word)': len(word2),
+            '-2:nvowels': countvowels(word2),
             '-2:word.lower()': word2.lower(),
             '-2:word[:3]': word2[:3],
             '-2:word[:2]': word2[:2],
@@ -338,6 +348,7 @@ def word2features(sent, i):
         features.update({
             '+1:word': word1,
             '+1:len(word)': len(word1),
+            '+1:nvowels': countvowels(word1),
             '+1:word.lower()': word1.lower(),
             '+1:word[:3]': word1[:3],
             '+1:word[:2]': word1[:2],
@@ -357,6 +368,7 @@ def word2features(sent, i):
         features.update({
             '+2:word': word2,
             '+2:len(word)': len(word2),
+            '+2:nvowels': countvowels(word2),
             '+2:word.lower()': word2.lower(),
             '+2:word.stemmed': re.sub(r'(.{2,}?)([aeiougyn]+$)',r'\1', word2.lower()),
             '+2:word[:3]': word2[:3],
